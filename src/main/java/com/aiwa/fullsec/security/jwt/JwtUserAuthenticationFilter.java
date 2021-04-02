@@ -39,7 +39,8 @@ public class JwtUserAuthenticationFilter extends UsernamePasswordAuthenticationF
                     authenticationRequest.getPassword()
             );
 
-            return mAuthenticationManager.authenticate(authentication);
+            Authentication authenticate = mAuthenticationManager.authenticate(authentication);
+            return authenticate;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -58,11 +59,11 @@ public class JwtUserAuthenticationFilter extends UsernamePasswordAuthenticationF
                 .claim("authorities", authResult.getAuthorities())
                 .setIssuedAt(new Date())
                 .setExpiration(java.sql.Date.valueOf(LocalDate.now().plusDays(14)))
-                .signWith(Keys.hmacShaKeyFor("really_strong_key".getBytes()))
+                .signWith(Keys.hmacShaKeyFor("really_strong_keyreally_strong_keyreally_strong_keyreally_strong_key".getBytes()))
                 .compact();
 
         response.addHeader("Authorization", "Bearer ".concat(token));
 
-        super.successfulAuthentication(request, response, chain, authResult);
+//        super.successfulAuthentication(request, response, chain, authResult);
     }
 }

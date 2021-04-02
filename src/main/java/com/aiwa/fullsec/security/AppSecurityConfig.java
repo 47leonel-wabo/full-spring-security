@@ -1,6 +1,7 @@
 package com.aiwa.fullsec.security;
 
 import com.aiwa.fullsec.security.auth.AppUserDetailsService;
+import com.aiwa.fullsec.security.jwt.JwtUserAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,9 +11,8 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
-import java.util.concurrent.TimeUnit;
 
 import static com.aiwa.fullsec.security.ApplicationUserPermissions.COURSE_WRITE;
 import static com.aiwa.fullsec.security.ApplicationUserRoles.*;
@@ -42,6 +42,9 @@ public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http
                 .csrf().disable()
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .and()
+                .addFilter(new JwtUserAuthenticationFilter(authenticationManager()))
                 .authorizeRequests()
                 .mvcMatchers("/", "index", "/css/*", "/js/*").permitAll()
                 .mvcMatchers("/api/**").hasRole(STUDENT.name())
@@ -50,25 +53,26 @@ public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
                 .mvcMatchers(HttpMethod.PUT, "/management/api/**").hasAuthority(COURSE_WRITE.getPermission())
                 .mvcMatchers(HttpMethod.GET, "/management/api/**").hasAnyRole(ADMIN.name(), TRAINEE.name())
                 .anyRequest().authenticated()
-                .and()
-                .formLogin()
-                .loginPage("/login")
-                    .usernameParameter("username") // name parameter into form fields
-                    .passwordParameter("password")
-                    .defaultSuccessUrl("/courses", true)
-                    .permitAll()
-                .and()
-                .rememberMe()
-                    .tokenValiditySeconds((int) TimeUnit.DAYS.toSeconds(21))
-                    .key("secure key for remember me")
-                    .rememberMeParameter("remember-me")
-                .and()
-                .logout()
-                    .logoutUrl("/logout")
-                    .clearAuthentication(true)
-                    .invalidateHttpSession(true)
-                    .deleteCookies("JSESSIONID", "remember-me") // name parameter into form fields
-                    .logoutSuccessUrl("/login");
+//                .and()
+//                .formLogin()
+//                .loginPage("/login")
+//                    .usernameParameter("username") // name parameter into form fields
+//                    .passwordParameter("password")
+//                    .defaultSuccessUrl("/courses", true)
+//                    .permitAll()
+//                .and()
+//                .rememberMe()
+//                    .tokenValiditySeconds((int) TimeUnit.DAYS.toSeconds(21))
+//                    .key("secure key for remember me")
+//                    .rememberMeParameter("remember-me")
+//                .and()
+//                .logout()
+//                    .logoutUrl("/logout")
+//                    .clearAuthentication(true)
+//                    .invalidateHttpSession(true)
+//                    .deleteCookies("JSESSIONID", "remember-me") // name parameter into form fields
+//                    .logoutSuccessUrl("/login");
+                ;
     }
 
     @Override
@@ -77,7 +81,7 @@ public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Bean
-    public DaoAuthenticationProvider daoAuthenticationProvider(){
+    public DaoAuthenticationProvider daoAuthenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setPasswordEncoder(mPasswordEncoder);
         authProvider.setUserDetailsService(mAppUserDetailsService);
