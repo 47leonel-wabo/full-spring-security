@@ -1,6 +1,7 @@
 package com.aiwa.fullsec.security;
 
 import com.aiwa.fullsec.security.auth.AppUserDetailsService;
+import com.aiwa.fullsec.security.jwt.JwtTokenVerifier;
 import com.aiwa.fullsec.security.jwt.JwtUserAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -45,6 +46,7 @@ public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .addFilter(new JwtUserAuthenticationFilter(authenticationManager()))
+                .addFilterAfter(new JwtTokenVerifier(), JwtUserAuthenticationFilter.class)
                 .authorizeRequests()
                 .mvcMatchers("/", "index", "/css/*", "/js/*").permitAll()
                 .mvcMatchers("/api/**").hasRole(STUDENT.name())
