@@ -1,17 +1,16 @@
 package com.aiwa.fullsec.security;
 
+import com.aiwa.fullsec.security.auth.AppUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 
 import java.util.concurrent.TimeUnit;
 
@@ -21,12 +20,22 @@ import static com.aiwa.fullsec.security.ApplicationUserRoles.*;
 @Configuration
 @EnableWebSecurity
 public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
-
+/*
     private final PasswordEncoder passwordEncoder;
 
     @Autowired
     public AppSecurityConfig(PasswordEncoder passwordEncoder) {
         this.passwordEncoder = passwordEncoder;
+    }
+ */
+
+    private final AppUserDetailsService mAppUserDetailsService;
+    private final PasswordEncoder mPasswordEncoder;
+
+    @Autowired
+    public AppSecurityConfig(AppUserDetailsService appUserDetailsService, PasswordEncoder passwordEncoder) {
+        mAppUserDetailsService = appUserDetailsService;
+        mPasswordEncoder = passwordEncoder;
     }
 
     @Override
@@ -43,7 +52,7 @@ public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
                 .anyRequest().authenticated()
                 .and()
                 .formLogin()
-                    .loginPage("/login")
+                .loginPage("/login")
                     .usernameParameter("username") // name parameter into form fields
                     .passwordParameter("password")
                     .defaultSuccessUrl("/courses", true)
@@ -55,13 +64,27 @@ public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
                     .rememberMeParameter("remember-me")
                 .and()
                 .logout()
-                .logoutUrl("/logout")
+                    .logoutUrl("/logout")
                     .clearAuthentication(true)
                     .invalidateHttpSession(true)
                     .deleteCookies("JSESSIONID", "remember-me") // name parameter into form fields
                     .logoutSuccessUrl("/login");
     }
 
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.authenticationProvider(daoAuthenticationProvider());
+    }
+
+    @Bean
+    public DaoAuthenticationProvider daoAuthenticationProvider(){
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setPasswordEncoder(mPasswordEncoder);
+        authProvider.setUserDetailsService(mAppUserDetailsService);
+        return authProvider;
+    }
+
+/*
     @Override
     @Bean
     protected UserDetailsService userDetailsService() {
@@ -92,5 +115,5 @@ public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
 
         return new InMemoryUserDetailsManager(adaUser, assaUser, haileUser);
     }
-
+*/
 }
