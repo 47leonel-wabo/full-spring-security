@@ -1,6 +1,7 @@
 package com.aiwa.fullsec.security;
 
 import com.aiwa.fullsec.security.auth.AppUserDetailsService;
+import com.aiwa.fullsec.security.jwt.JwtConfig;
 import com.aiwa.fullsec.security.jwt.JwtTokenVerifier;
 import com.aiwa.fullsec.security.jwt.JwtUserAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import javax.crypto.SecretKey;
 
 import static com.aiwa.fullsec.security.ApplicationUserPermissions.COURSE_WRITE;
 import static com.aiwa.fullsec.security.ApplicationUserRoles.*;
@@ -32,11 +35,19 @@ public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final AppUserDetailsService mAppUserDetailsService;
     private final PasswordEncoder mPasswordEncoder;
+    private final JwtConfig mJwtConfig;
+    private final SecretKey mSecretKey;
 
     @Autowired
-    public AppSecurityConfig(AppUserDetailsService appUserDetailsService, PasswordEncoder passwordEncoder) {
+    public AppSecurityConfig(AppUserDetailsService appUserDetailsService,
+                             PasswordEncoder passwordEncoder,
+                             JwtConfig jwtConfig,
+                             SecretKey secretKey
+    ) {
         mAppUserDetailsService = appUserDetailsService;
         mPasswordEncoder = passwordEncoder;
+        mJwtConfig = jwtConfig;
+        mSecretKey = secretKey;
     }
 
     @Override
@@ -45,8 +56,8 @@ public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
                 .csrf().disable()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
-                .addFilter(new JwtUserAuthenticationFilter(authenticationManager()))
-                .addFilterAfter(new JwtTokenVerifier(), JwtUserAuthenticationFilter.class)
+                .addFilter(new JwtUserAuthenticationFilter(authenticationManager(), mJwtConfig, mSecretKey))
+                .addFilterAfter(new JwtTokenVerifier(mJwtConfig, mSecretKey), JwtUserAuthenticationFilter.class)
                 .authorizeRequests()
                 .mvcMatchers("/", "index", "/css/*", "/js/*").permitAll()
                 .mvcMatchers("/api/**").hasRole(STUDENT.name())
@@ -54,7 +65,7 @@ public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
                 .mvcMatchers(HttpMethod.POST, "/management/api/**").hasAuthority(COURSE_WRITE.getPermission())
                 .mvcMatchers(HttpMethod.PUT, "/management/api/**").hasAuthority(COURSE_WRITE.getPermission())
                 .mvcMatchers(HttpMethod.GET, "/management/api/**").hasAnyRole(ADMIN.name(), TRAINEE.name())
-                .anyRequest().authenticated()
+                .anyRequest().authenticated();
 //                .and()
 //                .formLogin()
 //                .loginPage("/login")
@@ -74,7 +85,7 @@ public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
 //                    .invalidateHttpSession(true)
 //                    .deleteCookies("JSESSIONID", "remember-me") // name parameter into form fields
 //                    .logoutSuccessUrl("/login");
-                ;
+
     }
 
     @Override

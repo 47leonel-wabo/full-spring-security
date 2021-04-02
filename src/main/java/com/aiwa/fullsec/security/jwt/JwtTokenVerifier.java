@@ -1,15 +1,17 @@
 package com.aiwa.fullsec.security.jwt;
 
 import com.google.common.base.Strings;
-import io.jsonwebtoken.*;
-import io.jsonwebtoken.security.Keys;
-import io.jsonwebtoken.security.SignatureException;
-import io.jsonwebtoken.security.WeakKeyException;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import javax.crypto.SecretKey;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -22,6 +24,15 @@ import java.util.stream.Collectors;
 
 public class JwtTokenVerifier extends OncePerRequestFilter {
 
+    private final JwtConfig mJwtConfig;
+    private final SecretKey mSecretKey;
+
+    @Autowired
+    public JwtTokenVerifier(JwtConfig jwtConfig, SecretKey secretKey) {
+        mJwtConfig = jwtConfig;
+        mSecretKey = secretKey;
+    }
+
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
@@ -29,16 +40,16 @@ public class JwtTokenVerifier extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
-        String authorization = request.getHeader("Authorization");
-        if (Strings.isNullOrEmpty(authorization) || !authorization.startsWith("Bearer ")) {
+        String authorization = request.getHeader(mJwtConfig.getAuthorizationHeader());
+        if (Strings.isNullOrEmpty(authorization) || !authorization.startsWith(mJwtConfig.getTokenPrefix().concat(" "))) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        String token = authorization.replace("Bearer ", "");
+        String token = authorization.replace(mJwtConfig.getTokenPrefix().concat(" "), "");
         try {
             Jws<Claims> claimsJws = Jwts.parser()
-                    .setSigningKey(Keys.hmacShaKeyFor("really_strong_keyreally_strong_keyreally_strong_keyreally_strong_key".getBytes()))
+                    .setSigningKey(mSecretKey)
                     .parseClaimsJws(token);
 
             Claims jwsBody = claimsJws.getBody();

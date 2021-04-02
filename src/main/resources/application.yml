@@ -1,0 +1,4 @@
+application.jwt:
+  secretKey: really_strong_key_really_strong_key_really_strong_key_really_strong_key
+  tokenPrefix: Bearer
+  tokenExpirationAfterDays: 14
