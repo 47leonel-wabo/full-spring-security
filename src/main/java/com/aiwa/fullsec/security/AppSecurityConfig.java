@@ -24,14 +24,6 @@ import static com.aiwa.fullsec.security.ApplicationUserRoles.*;
 @Configuration
 @EnableWebSecurity
 public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
-/*
-    private final PasswordEncoder passwordEncoder;
-
-    @Autowired
-    public AppSecurityConfig(PasswordEncoder passwordEncoder) {
-        this.passwordEncoder = passwordEncoder;
-    }
- */
 
     private final AppUserDetailsService mAppUserDetailsService;
     private final PasswordEncoder mPasswordEncoder;
@@ -39,16 +31,18 @@ public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
     private final SecretKey mSecretKey;
 
     @Autowired
-    public AppSecurityConfig(AppUserDetailsService appUserDetailsService,
-                             PasswordEncoder passwordEncoder,
-                             JwtConfig jwtConfig,
-                             SecretKey secretKey
+    public AppSecurityConfig(
+            JwtConfig jwtConfig,
+            AppUserDetailsService appUserDetailsService,
+            PasswordEncoder passwordEncoder,
+            SecretKey secretKey
     ) {
         mAppUserDetailsService = appUserDetailsService;
         mPasswordEncoder = passwordEncoder;
         mJwtConfig = jwtConfig;
         mSecretKey = secretKey;
     }
+
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
