@@ -3,6 +3,7 @@ package com.aiwa.fullsec.security.jwt;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -62,7 +63,7 @@ public class JwtUserAuthenticationFilter extends UsernamePasswordAuthenticationF
                 .setSubject(authResult.getName())
                 .claim("authorities", authResult.getAuthorities())
                 .setIssuedAt(new Date())
-                .setExpiration(java.sql.Date.valueOf(LocalDate.now().plusDays(14)))
+                .setExpiration(java.sql.Date.valueOf(LocalDate.now().plusDays(mJwtConfig.getTokenExpirationAfterDays())))
                 .signWith(mSecretKey)
                 .compact();
 

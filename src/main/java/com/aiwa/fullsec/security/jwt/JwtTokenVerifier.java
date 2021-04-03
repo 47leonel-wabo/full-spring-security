@@ -27,7 +27,6 @@ public class JwtTokenVerifier extends OncePerRequestFilter {
     private final JwtConfig mJwtConfig;
     private final SecretKey mSecretKey;
 
-    @Autowired
     public JwtTokenVerifier(JwtConfig jwtConfig, SecretKey secretKey) {
         mJwtConfig = jwtConfig;
         mSecretKey = secretKey;
